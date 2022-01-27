@@ -31,7 +31,12 @@ const run = async () => {
       const result = await placeCollection.insertOne(place);
       res.json(result);
     });
-    // get all place from database
+    // get all places from database
+    app.get("/allPlaces", async (req, res) => {
+      const result = await placeCollection.find({}).toArray();
+      res.json(result);
+    });
+    // get 10 place from database
     app.get("/places/:page", async (req, res) => {
       const page = req.params.page;
       const cursor = placeCollection.find({});
@@ -39,8 +44,8 @@ const run = async () => {
       let places;
       if (page) {
         places = await cursor
-          .skip(page * 9)
-          .limit(9)
+          .skip(page * 10)
+          .limit(10)
           .toArray();
       } else {
         places = await cursor.limit(10).toArray();
@@ -70,11 +75,62 @@ const run = async () => {
       const result = await userCollection.insertOne(user);
       res.json(result);
     });
+    // get all user
+    app.get("/users", async (req, res) => {
+      const result = await userCollection.find({}).toArray();
+      res.json(result);
+    });
 
+    // user management is it admin or user
+    app.put("/users/:id", async (req, res) => {
+      const userId = req.params.id;
+      const role = req.body;
+      const setRol = role.role;
+      const query = { _id: ObjectId(userId) };
+      const options = { upsert: true };
+      const updateRole = {
+        $set: {
+          role: setRol,
+        },
+      };
+      const result = await userCollection.updateOne(query, updateRole, options);
+      res.json(result);
+    });
+    // get user for specific user_id
+    app.get("/users/:user_id", async (req, res) => {
+      const id = req.params.user_id;
+      const result = await userCollection.findOne({ user_id: id });
+      res.json(result);
+    });
     // post a single booked place
     app.post("/booking", async (req, res) => {
       const data = req.body;
       const result = await bookingCollection.insertOne(data);
+      res.json(result);
+    });
+
+    // get all booking place
+    app.get("/booking", async (req, res) => {
+      const result = await bookingCollection.find({}).toArray();
+      res.json(result);
+    });
+    // delete a single booking
+    app.delete("/booking/:id", async (req, res) => {
+      const id = req.params.id;
+      console.log(id);
+      const result = await bookingCollection.deleteOne({ _id: ObjectId(id) });
+      res.json(result);
+    });
+    // update approved booking
+    app.put("/approve/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: {
+          status: "Approved",
+        },
+      };
+      const result = await bookingCollection.updateOne(query, updateDoc);
       res.json(result);
     });
     // get booking data for specific user
@@ -85,10 +141,17 @@ const run = async () => {
         .toArray();
       res.json(result);
     });
+
     // insert a single review
     app.post("/reviews", async (req, res) => {
       const review = req.body;
       const result = await reviewCollection.insertOne(review);
+      res.json(result);
+    });
+
+    // get all reviews
+    app.get("/reviews", async (req, res) => {
+      const result = await reviewCollection.find({}).toArray();
       res.json(result);
     });
   } finally {
